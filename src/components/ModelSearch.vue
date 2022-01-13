@@ -3,43 +3,66 @@
     <span class="title">모델 검색</span>
     <div class="display">
       <div class="searchBar">
-        <input type="search" />
-        <button type="button">검색(돋보기)</button>
+        <input
+          type="search"
+          name="q"
+          placeholder="모델 검색"
+          v-model="inputQuery"
+          @keyup.enter="searchItem(inputQuery)"
+        />
+        <button type="button" for="inputQuery" @click="searchItem(inputQuery)">
+          검색
+        </button>
       </div>
 
       <div class="menuCanvas">
         <ul>
-          <li @click="isShow1 = !isShow1">정수기</li>
-          <transition>
-            <ul class="modelGroup" v-if="isShow1">
-              <li @click="isShow11 = !isShow11">M1</li>
-              <transition>
-                <ul class="modelDetail" v-if="isShow11">
-                  <li>M1-102</li>
-                  <li>M1-103</li>
-                  <li>M1-107</li>
-                  <li>M1-306</li>
-                  <li>M1-310</li>
-                </ul>
-              </transition>
-              <li @click="isShow12 = !isShow12">M2</li>
-              <transition>
-                <ul class="modelDetail" v-if="isShow12">
-                  <li>M2-102</li>
-                  <li>M2-103</li>
-                  <li>M2-107</li>
-                  <li>M2-306</li>
-                  <li>M2-310</li>
-                </ul>
-              </transition>
-            </ul>
-          </transition>
-          <li>공기청정기</li>
-          <li>비데</li>
+          <li :key="i" v-for="(familyInfo, i) in productList">
+            <span
+              @click="
+                [
+                  scrollDown(familyInfo.family),
+                  exclusiveSelected(familyInfo.family),
+                ]
+              "
+              :class="{ colored: isColored[familyInfo.family] == true }"
+            >
+              {{ familyInfo.family }}
+            </span>
+            <transition>
+              <ul v-if="isShow[familyInfo.family] == true">
+                <li :key="j" v-for="(lineInfo, j) in familyInfo.sub">
+                  <span
+                    @click="
+                      [
+                        scrollDown(lineInfo.line),
+                        exclusiveSelected(lineInfo.line),
+                      ]
+                    "
+                    :class="{ colored: isColored[lineInfo.line] == true }"
+                  >
+                    {{ lineInfo.line }}
+                  </span>
+                  <transition>
+                    <ul v-if="isShow[lineInfo.line] == true">
+                      <li :key="k" v-for="(modelName, k) in lineInfo.model">
+                        <span
+                          @click.stop="exclusiveSelected(modelName)"
+                          :class="{
+                            colored: isColored[modelName] == true,
+                          }"
+                        >
+                          {{ modelName }}
+                        </span>
+                      </li>
+                    </ul>
+                  </transition>
+                </li>
+              </ul>
+            </transition>
+          </li>
         </ul>
       </div>
-
-      
     </div>
   </section>
 </template>
@@ -48,24 +71,93 @@
 export default {
   data() {
     return {
-      isShow1: true,
-      isShow11: true,
-      isShow12: true,
+      // 나중에 동적으로 생성
+      isShow: {},
+      isColored: {},
       productList: [],
+      modelList: {},
+      inputQuery: "",
     };
   },
+
+  created() {
+    this.getList();
+  },
+
   methods: {
     async getList() {
       this.productList = await this.$api(
-        "https://f10eeb57-5665-43eb-a78a-b78f131c7c0d.mock.pstmn.io/EnterLeaveTransition",
+        "https://03f968e1-7e6f-40ce-8ff4-dbfebcf63498.mock.pstmn.io/list",
         "get"
       );
+
+      this.modelList = await this.$api(
+        "https://03f968e1-7e6f-40ce-8ff4-dbfebcf63498.mock.pstmn.io/search",
+        "get"
+      );
+    },
+
+    scrollDown(category) {
+      this.isShow[category] = !this.isShow[category];
+    },
+
+    exclusiveSelected(modelName) {
+      this.isColored = { m2: false };
+      this.isColored[modelName] = true;
+      console.log(this.isColored);
+    },
+
+    searchItem(inputQuery) {
+      this.isShow = {};
+      this.isColored = {};
+
+      this.isColored[inputQuery] = true;
+      let child = inputQuery;
+      while (!this.modelList["root"].includes(child)) {
+        // 최상위에 다다르지 않는 동안 작동
+        console.log(child, 1);
+        child = this.searchParent(child);
+        console.log(child, 2);
+        this.isShow[child] = true;
+      }
+    },
+    searchParent(child) {
+      let graph = this.modelList;
+      let visited = [];
+      let needVisit = [];
+      let parent = "";
+
+      needVisit.push("root"); // root
+      while (needVisit.length != 0) {
+        let node = needVisit.shift();
+
+        if (!visited.includes(node)) {
+          // 방문한 적 없으면,
+          visited.push(node); // 기록하고,
+
+          for (const subNode of graph[node]) {
+            // 자식 노드 순회하면서 찾는 단어가 있나 보고,
+            if (subNode == child) {
+              console.log("발견", subNode); // 찾은 노드 출력해주고
+              parent = node; // 찾았다면 부모 지정하고
+              return parent;
+            }
+          } // 부모 수준에서 순회를 하면서 탐색하기 때문에 자식없는 노드 도달이 불가능
+
+          needVisit = [...needVisit, ...graph[node]];
+          // console.log(needVisit, "needVisit");
+        }
+      }
     },
   },
 };
 </script>
 
 <style scoped>
+.abc {
+  display: none;
+}
+
 * {
   padding: 0;
   margin: 0;
@@ -80,6 +172,10 @@ ul {
   cursor: pointer;
   padding: 2px;
   list-style-type: none;
+}
+
+.colored {
+  background-color: green;
 }
 
 .title {
