@@ -1,7 +1,18 @@
 <template>
   <section class="container">
-    <span class="title">모델 검색</span>
-    <div class="display">
+    <div class="displayHeader">
+      <span class="title">모델 검색</span>
+      <div>
+        <button type="button" @click="this.isExposed['group'] = true">
+          그룹 생성
+        </button>
+        <button type="button" @click="this.isExposed['mainModel'] = true">
+          메인 모델 생성
+        </button>
+        <button type="button" @click="deleteItem">삭제</button>
+      </div>
+    </div>
+    <div class="displayBody">
       <div class="searchBar">
         <input
           type="search"
@@ -17,7 +28,15 @@
 
       <div class="menuCanvas">
         <ul>
-          <li :key="i" v-for="(familyInfo, i) in productList">
+          <input
+            type="text"
+            v-if="isExposed['group'] == true"
+            v-model="groupName"
+            @keyup.enter="
+              [addItem(groupName), (this.isExposed['group'] = false)]
+            "
+          />
+          <li class="li1" :key="i" v-for="(familyInfo, i) in renderProductList">
             <span
               @click="
                 [
@@ -30,8 +49,12 @@
               {{ familyInfo.family }}
             </span>
             <transition>
-              <ul v-if="isShow[familyInfo.family] == true">
-                <li :key="j" v-for="(lineInfo, j) in familyInfo.sub">
+              <ul v-if="isShown[familyInfo.family] == true">
+                <li
+                  class="li2"
+                  :key="j"
+                  v-for="(lineInfo, j) in familyInfo.sub"
+                >
                   <span
                     @click="
                       [
@@ -44,8 +67,12 @@
                     {{ lineInfo.line }}
                   </span>
                   <transition>
-                    <ul v-if="isShow[lineInfo.line] == true">
-                      <li :key="k" v-for="(modelName, k) in lineInfo.model">
+                    <ul v-if="isShown[lineInfo.line] == true">
+                      <li
+                        class="li3"
+                        :key="k"
+                        v-for="(modelName, k) in lineInfo.model"
+                      >
                         <span
                           @click.stop="exclusiveSelected(modelName)"
                           :class="{
@@ -72,11 +99,13 @@ export default {
   data() {
     return {
       // 나중에 동적으로 생성
-      isShow: {},
+      isShown: {},
       isColored: {},
+      isExposed: {},
       productList: [],
       modelList: {},
       inputQuery: "",
+      seletedItem: "",
     };
   },
 
@@ -84,9 +113,20 @@ export default {
     this.getList();
   },
 
+  computed: {
+    renderProductList() {
+      return this.productList;
+    },
+
+    renderModelList() {
+      return this.modelList;
+    },
+  },
+
   methods: {
     async getList() {
       this.productList = await this.$api(
+        // 나중에 비식별화
         "https://03f968e1-7e6f-40ce-8ff4-dbfebcf63498.mock.pstmn.io/list",
         "get"
       );
@@ -98,27 +138,27 @@ export default {
     },
 
     scrollDown(category) {
-      this.isShow[category] = !this.isShow[category];
+      this.isShown[category] = !this.isShown[category];
     },
 
     exclusiveSelected(modelName) {
-      this.isColored = { m2: false };
+      this.isColored = {};
       this.isColored[modelName] = true;
-      console.log(this.isColored);
+      this.seletedItem = Object.keys(this.isColored)[0];
     },
 
     searchItem(inputQuery) {
-      this.isShow = {};
+      this.isShown = {};
       this.isColored = {};
 
       this.isColored[inputQuery] = true;
       let child = inputQuery;
-      while (!this.modelList["root"].includes(child)) {
+      while (!this.renderModelList["root"].includes(child)) {
         // 최상위에 다다르지 않는 동안 작동
         console.log(child, 1);
         child = this.searchParent(child);
         console.log(child, 2);
-        this.isShow[child] = true;
+        this.isShown[child] = true;
       }
     },
     searchParent(child) {
@@ -149,6 +189,29 @@ export default {
         }
       }
     },
+
+    addItem(item) {
+      this.productList.push({ family: item });
+      console.log(this.productList);
+
+      this.modelList[item] = [];
+      console.log(this.modelList);
+    },
+
+    deleteItem() {
+      let productList = this.productList;
+      productList.forEach((item, idx) => {
+        console.log(item, idx);
+        if (item.family == this.seletedItem) {
+          this.productList.splice(idx, 1);
+        }
+      });
+
+      delete this.modelList[this.seletedItem];
+
+      console.log(this.productList, 1111);
+      console.log(this.modelList, 2222);
+    },
   },
 };
 </script>
@@ -168,10 +231,33 @@ section {
   height: 600px;
 }
 
-ul {
+li {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction: column;
+
   cursor: pointer;
   padding: 2px;
   list-style-type: none;
+}
+
+.li1 {
+  margin-left: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.li2 {
+  margin-left: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.li3 {
+  margin-left: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .colored {
@@ -188,7 +274,20 @@ ul {
   justify-content: flex-start;
   align-content: flex-start;
 }
-.display {
+
+.displayHeader {
+  margin: 5px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.groupInput {
+  display: none;
+  width: 100px;
+}
+
+.displayBody {
   background-color: lightgray;
   width: 300px;
   height: 600px;
@@ -203,6 +302,7 @@ ul {
   margin: 10px;
   width: 90%;
 }
+
 .menuCanvas {
   background-color: white;
   width: 90%;
