@@ -185,7 +185,6 @@ export default {
           } // 부모 수준에서 순회를 하면서 탐색하기 때문에 자식없는 노드 도달이 불가능
 
           needVisit = [...needVisit, ...graph[node]];
-          // console.log(needVisit, "needVisit");
         }
       }
     },
@@ -208,9 +207,6 @@ export default {
       });
 
       delete this.modelList[this.seletedItem];
-
-      console.log(this.productList, 1111);
-      console.log(this.modelList, 2222);
     },
   },
 };
