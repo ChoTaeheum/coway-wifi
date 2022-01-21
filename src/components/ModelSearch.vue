@@ -6,9 +6,6 @@
         <button type="button" @click="this.isExposed['group'] = true">
           그룹 생성
         </button>
-        <button type="button" @click="this.isExposed['mainModel'] = true">
-          메인 모델 생성
-        </button>
         <button type="button" @click="deleteItem">삭제</button>
       </div>
     </div>
@@ -98,7 +95,6 @@
 export default {
   data() {
     return {
-      // 나중에 동적으로 생성
       isShown: {},
       isColored: {},
       isExposed: {},

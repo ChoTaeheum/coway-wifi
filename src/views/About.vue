@@ -6,7 +6,7 @@
 
 
 <script>
-import ModelSearch from "@/components/ProcessDesign.vue";
+import ModelSearch from "@/components/ModelInformation.vue";
 export default {
   name: "About",
   components: {
