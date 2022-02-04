@@ -1,5 +1,5 @@
 <template>
-  <section class="container">
+  <section>
     <div class="displayHeader">
       <span class="title">모델 검색</span>
       <div>
@@ -122,7 +122,6 @@ export default {
   methods: {
     async getList() {
       this.productList = await this.$api(
-        // 나중에 비식별화
         "https://03f968e1-7e6f-40ce-8ff4-dbfebcf63498.mock.pstmn.io/list",
         "get"
       );
@@ -209,10 +208,6 @@ export default {
 </script>
 
 <style scoped>
-.abc {
-  display: none;
-}
-
 * {
   padding: 0;
   margin: 0;
@@ -221,6 +216,11 @@ export default {
 section {
   width: 300px;
   height: 600px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-content: flex-start;
 }
 
 li {
@@ -258,13 +258,6 @@ li {
 
 .title {
   width: 30%;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-content: flex-start;
 }
 
 .displayHeader {

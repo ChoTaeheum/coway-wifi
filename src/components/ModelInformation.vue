@@ -1,5 +1,5 @@
 <template>
-  <section class="container">
+  <section>
     <div class="displayHeader">
       <span>모델정보</span>
     </div>
@@ -41,9 +41,7 @@ export default {
 section {
   width: 300px;
   height: 600px;
-}
 
-.container {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;

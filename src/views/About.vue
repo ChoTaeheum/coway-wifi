@@ -6,7 +6,7 @@
 
 
 <script>
-import ModelSearch from "@/components/ModelInformation.vue";
+import ModelSearch from "@/components/InspectionItemList.vue";
 export default {
   name: "About",
   components: {
